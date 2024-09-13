@@ -2,7 +2,7 @@ use femto_gpt::gpt::{TrainingState, GPT};
 use femto_gpt::graph::GraphError;
 use femto_gpt::tokenizer::{SimpleTokenizer, Tokenizer};
 use std::fs;
-use std::io::prelude::*;
+use std::io::{self, prelude::*};
 use std::path::Path;
 
 fn main() -> Result<(), GraphError> {
@@ -66,16 +66,25 @@ fn main() -> Result<(), GraphError> {
 
     let inference_temperature = 0.5; // How creative? 0.0 min 1.0 max
 
-    let prompt = "The description in this text is about the company named";
-    let inference = gpt.infer(
-        &mut rng,
-        &tokenizer.tokenize(prompt),
-        100,
-        inference_temperature,
-        |_ch| {},
-    )?;
+    loop {
+        let mut prompt = String::new();
+        println!("Enter your prompt (or type 'exit' to quit):");
+        io::stdin().read_line(&mut prompt).expect("Failed to read line");
+        let prompt = prompt.trim();
+        if prompt == "exit" {
+            break;
+        }
 
-    println!("{}", tokenizer.untokenize(&inference));
+        let inference = gpt.infer(
+            &mut rng,
+            &tokenizer.tokenize(prompt),
+            100,
+            inference_temperature,
+            |_ch| {},
+        )?;
+
+        println!("{}", tokenizer.untokenize(&inference));
+    }
 
     Ok(())
 }
